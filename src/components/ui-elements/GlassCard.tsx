@@ -1,11 +1,10 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { motion, MotionProps } from "framer-motion";
+import { motion, HTMLMotionProps } from "framer-motion";
 
-interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement>, MotionProps {
+interface GlassCardProps extends HTMLMotionProps<"div"> {
   children: React.ReactNode;
-  className?: string;
   elevation?: "low" | "medium" | "high";
   interactive?: boolean;
 }
@@ -31,8 +30,8 @@ const GlassCard: React.FC<GlassCardProps> = ({
         interactive && "hover:shadow-xl transition-shadow cursor-pointer",
         className
       )}
-      whileHover={interactive ? { scale: 1.02 } : {}}
-      whileTap={interactive ? { scale: 0.98 } : {}}
+      whileHover={interactive ? { scale: 1.02 } : undefined}
+      whileTap={interactive ? { scale: 0.98 } : undefined}
       {...props}
     >
       {children}
