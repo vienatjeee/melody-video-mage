@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress"; 
 import { 
   Video, 
   Play, 
@@ -22,6 +23,12 @@ import GlassCard from "../ui-elements/GlassCard";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+interface GenerationProgress {
+  status: "preparing" | "generating" | "rendering" | "completed";
+  progress: number;
+  message: string;
+}
+
 const VideoCreator: React.FC = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -29,6 +36,11 @@ const VideoCreator: React.FC = () => {
   const [duration, setDuration] = useState([15]);
   const [style, setStyle] = useState("realistic");
   const [aspect, setAspect] = useState("16:9");
+  const [progress, setProgress] = useState<GenerationProgress>({
+    status: "preparing",
+    progress: 0,
+    message: "Preparing your request..."
+  });
   
   const handleGenerate = () => {
     if (!prompt) {
@@ -37,13 +49,82 @@ const VideoCreator: React.FC = () => {
     }
     
     setIsGenerating(true);
+    setGeneratedVideo(null);
     
-    // Simulate AI generation
-    setTimeout(() => {
-      setIsGenerating(false);
-      setGeneratedVideo("https://file-examples.com/storage/fee788a10e64f06aae9f905/2017/04/file_example_MP4_480_1_5MG.mp4");
-      toast.success("Video generated successfully!");
-    }, 5000);
+    // Simulate AI video generation with progressive updates
+    setProgress({
+      status: "preparing",
+      progress: 10,
+      message: "Analyzing your prompt..."
+    });
+    
+    const simulateProgress = () => {
+      // Preparing phase - 0-30%
+      setTimeout(() => {
+        setProgress({
+          status: "preparing",
+          progress: 25,
+          message: "Setting up scene composition..."
+        });
+        
+        // Generating phase - 30-70%
+        setTimeout(() => {
+          setProgress({
+            status: "generating",
+            progress: 40,
+            message: "Generating initial frames..."
+          });
+          
+          const interval = setInterval(() => {
+            setProgress(prev => {
+              if (prev.progress >= 70) {
+                clearInterval(interval);
+                
+                // Rendering phase - 70-100%
+                setProgress({
+                  status: "rendering",
+                  progress: 75,
+                  message: "Rendering final video..."
+                });
+                
+                setTimeout(() => {
+                  setProgress({
+                    status: "rendering",
+                    progress: 90,
+                    message: "Applying visual effects..."
+                  });
+                  
+                  setTimeout(() => {
+                    setProgress({
+                      status: "completed",
+                      progress: 100,
+                      message: "Video ready!"
+                    });
+                    
+                    setIsGenerating(false);
+                    setGeneratedVideo("https://file-examples.com/storage/fee788a10e64f06aae9f905/2017/04/file_example_MP4_480_1_5MG.mp4");
+                    toast.success("Video generated successfully!");
+                  }, 1500);
+                }, 2000);
+                
+                return prev;
+              }
+              
+              return {
+                ...prev,
+                progress: prev.progress + 5,
+                message: prev.progress < 55 
+                  ? "Building video frames..." 
+                  : "Enhancing video quality..."
+              };
+            });
+          }, 600);
+          
+        }, 1000);
+      }, 800);
+    };
+    
+    simulateProgress();
   };
   
   const styleOptions = [
@@ -149,6 +230,48 @@ const VideoCreator: React.FC = () => {
           </Button>
         </div>
       </GlassCard>
+      
+      {isGenerating && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <GlassCard>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-primary">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <h3 className="text-lg font-medium">Creating Your Video</h3>
+                </div>
+                <div className="text-sm font-medium text-muted-foreground">
+                  {progress.progress}%
+                </div>
+              </div>
+              
+              <Progress value={progress.progress} className="h-2" />
+              
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className={`w-2 h-2 rounded-full ${progress.status === "preparing" ? "bg-blue-500" : "bg-gray-300"}`}></div>
+                <span className={progress.status === "preparing" ? "text-blue-500 font-medium" : ""}>Preparing</span>
+                <div className="h-px bg-gray-200 flex-1"></div>
+                <div className={`w-2 h-2 rounded-full ${progress.status === "generating" ? "bg-purple-500" : "bg-gray-300"}`}></div>
+                <span className={progress.status === "generating" ? "text-purple-500 font-medium" : ""}>Generating</span>
+                <div className="h-px bg-gray-200 flex-1"></div>
+                <div className={`w-2 h-2 rounded-full ${progress.status === "rendering" ? "bg-amber-500" : "bg-gray-300"}`}></div>
+                <span className={progress.status === "rendering" ? "text-amber-500 font-medium" : ""}>Rendering</span>
+                <div className="h-px bg-gray-200 flex-1"></div>
+                <div className={`w-2 h-2 rounded-full ${progress.status === "completed" ? "bg-green-500" : "bg-gray-300"}`}></div>
+                <span className={progress.status === "completed" ? "text-green-500 font-medium" : ""}>Complete</span>
+              </div>
+              
+              <p className="text-sm text-center italic">
+                {progress.message}
+              </p>
+            </div>
+          </GlassCard>
+        </motion.div>
+      )}
       
       {generatedVideo && (
         <motion.div

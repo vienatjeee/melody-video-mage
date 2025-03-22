@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { 
   Music, 
   Play, 
@@ -13,10 +14,17 @@ import {
   Loader2, 
   Volume2, 
   Clock, 
-  Tag 
+  Tag,
+  Waves
 } from "lucide-react";
 import GlassCard from "../ui-elements/GlassCard";
 import { toast } from "sonner";
+
+interface GenerationProgress {
+  status: "analyzing" | "composing" | "mastering" | "completed";
+  progress: number;
+  message: string;
+}
 
 const MusicCreator: React.FC = () => {
   const [prompt, setPrompt] = useState("");
@@ -24,6 +32,11 @@ const MusicCreator: React.FC = () => {
   const [generatedMusic, setGeneratedMusic] = useState<string | null>(null);
   const [duration, setDuration] = useState([60]);
   const [mood, setMood] = useState("relaxed");
+  const [progress, setProgress] = useState<GenerationProgress>({
+    status: "analyzing",
+    progress: 0,
+    message: "Analyzing your prompt..."
+  });
   
   const handleGenerate = () => {
     if (!prompt) {
@@ -32,13 +45,82 @@ const MusicCreator: React.FC = () => {
     }
     
     setIsGenerating(true);
+    setGeneratedMusic(null);
     
-    // Simulate AI generation
-    setTimeout(() => {
-      setIsGenerating(false);
-      setGeneratedMusic("https://file-examples.com/storage/fee788a10e64f06aae9f905/2017/11/file_example_MP3_700KB.mp3");
-      toast.success("Music generated successfully!");
-    }, 3000);
+    // Simulate AI music generation with progressive updates
+    setProgress({
+      status: "analyzing",
+      progress: 10,
+      message: "Analyzing musical elements in your prompt..."
+    });
+    
+    const simulateProgress = () => {
+      // Analyzing phase - 0-30%
+      setTimeout(() => {
+        setProgress({
+          status: "analyzing",
+          progress: 25,
+          message: "Determining melody and chord progression..."
+        });
+        
+        // Composing phase - 30-70%
+        setTimeout(() => {
+          setProgress({
+            status: "composing",
+            progress: 40,
+            message: "Composing melody..."
+          });
+          
+          const interval = setInterval(() => {
+            setProgress(prev => {
+              if (prev.progress >= 70) {
+                clearInterval(interval);
+                
+                // Mastering phase - 70-100%
+                setProgress({
+                  status: "mastering",
+                  progress: 75,
+                  message: "Mastering audio..."
+                });
+                
+                setTimeout(() => {
+                  setProgress({
+                    status: "mastering",
+                    progress: 90,
+                    message: "Applying final touches..."
+                  });
+                  
+                  setTimeout(() => {
+                    setProgress({
+                      status: "completed",
+                      progress: 100,
+                      message: "Music ready!"
+                    });
+                    
+                    setIsGenerating(false);
+                    setGeneratedMusic("https://file-examples.com/storage/fee788a10e64f06aae9f905/2017/11/file_example_MP3_700KB.mp3");
+                    toast.success("Music generated successfully!");
+                  }, 1500);
+                }, 1500);
+                
+                return prev;
+              }
+              
+              return {
+                ...prev,
+                progress: prev.progress + 5,
+                message: prev.progress < 55 
+                  ? "Creating harmonic structure..." 
+                  : "Adding instrumentation..."
+              };
+            });
+          }, 500);
+          
+        }, 1000);
+      }, 800);
+    };
+    
+    simulateProgress();
   };
   
   const moodOptions = [
@@ -126,6 +208,75 @@ const MusicCreator: React.FC = () => {
           </Button>
         </div>
       </GlassCard>
+      
+      {isGenerating && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <GlassCard>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-primary">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <h3 className="text-lg font-medium">Composing Your Music</h3>
+                </div>
+                <div className="text-sm font-medium text-muted-foreground">
+                  {progress.progress}%
+                </div>
+              </div>
+              
+              <Progress value={progress.progress} className="h-2" />
+              
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className={`w-2 h-2 rounded-full ${progress.status === "analyzing" ? "bg-blue-500" : "bg-gray-300"}`}></div>
+                <span className={progress.status === "analyzing" ? "text-blue-500 font-medium" : ""}>Analyzing</span>
+                <div className="h-px bg-gray-200 flex-1"></div>
+                <div className={`w-2 h-2 rounded-full ${progress.status === "composing" ? "bg-purple-500" : "bg-gray-300"}`}></div>
+                <span className={progress.status === "composing" ? "text-purple-500 font-medium" : ""}>Composing</span>
+                <div className="h-px bg-gray-200 flex-1"></div>
+                <div className={`w-2 h-2 rounded-full ${progress.status === "mastering" ? "bg-amber-500" : "bg-gray-300"}`}></div>
+                <span className={progress.status === "mastering" ? "text-amber-500 font-medium" : ""}>Mastering</span>
+                <div className="h-px bg-gray-200 flex-1"></div>
+                <div className={`w-2 h-2 rounded-full ${progress.status === "completed" ? "bg-green-500" : "bg-gray-300"}`}></div>
+                <span className={progress.status === "completed" ? "text-green-500 font-medium" : ""}>Complete</span>
+              </div>
+              
+              <div className="flex items-center justify-center">
+                <motion.div 
+                  className="flex items-end h-10 gap-1"
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1 bg-primary rounded-full"
+                      animate={{ 
+                        height: [
+                          `${Math.random() * 30 + 10}%`, 
+                          `${Math.random() * 70 + 30}%`, 
+                          `${Math.random() * 30 + 10}%`
+                        ] 
+                      }}
+                      transition={{ 
+                        duration: 1, 
+                        repeat: Infinity, 
+                        delay: i * 0.1 
+                      }}
+                    />
+                  ))}
+                </motion.div>
+              </div>
+              
+              <p className="text-sm text-center italic">
+                {progress.message}
+              </p>
+            </div>
+          </GlassCard>
+        </motion.div>
+      )}
       
       {generatedMusic && (
         <motion.div

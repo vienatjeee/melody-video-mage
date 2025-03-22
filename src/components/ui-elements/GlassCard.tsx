@@ -17,15 +17,15 @@ const GlassCard: React.FC<GlassCardProps> = ({
   ...props
 }) => {
   const elevationStyles = {
-    low: "shadow-sm",
-    medium: "shadow-md",
-    high: "shadow-lg",
+    low: "shadow-sm backdrop-blur-sm bg-white/60 dark:bg-gray-900/40",
+    medium: "shadow-md backdrop-blur-md bg-white/70 dark:bg-gray-900/50",
+    high: "shadow-lg backdrop-blur-lg bg-white/80 dark:bg-gray-900/60",
   };
   
   return (
     <motion.div
       className={cn(
-        "glass-card p-5 overflow-hidden",
+        "rounded-xl border border-white/20 dark:border-gray-800/50 p-5 overflow-hidden",
         elevationStyles[elevation],
         interactive && "hover:shadow-xl transition-shadow cursor-pointer",
         className
